@@ -1,7 +1,7 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 from tkinter import messagebox as mg
-import backend
+import backendcos
 
 def input1(frame,text,yl,ye):
         label = tk.Label(frame, text=text,bg='#7476B1', font=15, fg='white')
@@ -20,10 +20,16 @@ class create_info():
     label.place(x=305,y=325)
 
 class dashboard_info():
+
    def __init__(self,window):
       self.window=window
 
    def display(self):
+    m =navbar(window)
+    budget_exists = True
+    if budget_exists == False:
+            m.nobudget('Cannot Show Budget And Category Info\n Because Budget Does Not Exist')
+    else:
       #BUDGET DISPLAY FRAME
       self.fram = tk.Frame(self.window,bg='#7476B1', width=700,height=180, padx=10)
       self.fram.place(x=180,y=40)
@@ -88,35 +94,47 @@ class track_info():
     def __init__(self,window):
        self.window=window   
 
-    def submitexp(self):
-          self.expnameentry= self.enameentry.get()
-          self.expspententry = self.espententry.get()
-          self.expcategoryentry = self.ecategoryentry.get()
-          self.expdateentry = self.edateentry.get()
-         
-          m= [self.enameentry,self.espententry,self.ecategoryentry,self.edateentry]
+    def submit(self,name,money,category,date,a,b):
+       try:
+          n= name.get()
+          m = int(money.get())
+          c = category.get()
+          d = date.get()                                     
+          my=  [money,name,category,date]
 
-          
-          if self.expnameentry == '' or self.expnameentry.isdigit() == True:
-             mg.showerror('Info Error', 'Invalid Value')
-             self.iserror = True
-
-          for i in m:
+        
+          if n == '' or c == '' or d == '':
+              mg.showerror('Info Error', 'Please Input In Every Field')
+              self.iserror = True
+          else:
+           for i in my:
              i.delete(0,'end')
+           mg.showinfo(a,b)
+             
+       except ValueError:
+             mg.showerror('Info Value', 'Invalid Value')
+             self.iserror = True
+      
 
-    def display(self):   
+    def display(self): 
+      m =navbar(window)
+      budget_exists = True
+      if budget_exists == False:
+            m.nobudget('Cannot Log Expenses And Income\n Because Budget Does Not Exist')
+      else: 
         # EXPENSES FRAME
         self.framd = tk.Frame(self.window,bg='#7476B1', width=500,height=590, padx=10)
         self.framd.place(x=230,y=45)
         enam = tk.Label(self.framd, text='LOG EXPENSES',bg='#7476B1',font=(None,20,'bold'))
         enam.place(relx= 0.5, rely=0.1,anchor='center')
-        
-        self.enameentry=input1(self.framd,'Input Name Of Expenses',0.25,0.29,)
+        budget_exists = False
+        self.enameentry=input1(self.framd,'Input Name Of Expense',0.25,0.29,)
         self.espententry = input1(self.framd,'Input Money Spent',0.35,0.39,)
         self.ecategoryentry = input1(self.framd,'Input Category(If None input Unallocated)',0.45,0.49,)
         self.edateentry = input1(self.framd,'Input Date Of Expense',0.55,0.59,)
 
-        esubmit = tk.Button(self.framd, text='Submit', relief=tk.FLAT, bg= 'white',command=self.submitexp)
+        esubmit = tk.Button(self.framd, text='Submit', relief=tk.FLAT, bg= 'white',
+                            command=lambda:self.submit(self.enameentry,self.espententry,self.ecategoryentry,self.edateentry,'Expense','Expense Succesfully Logged'))
         esubmit.place(relx= 0.5, rely=0.65,anchor='center')
 
         #INCOME FRAME
@@ -131,13 +149,22 @@ class track_info():
         self.icategoryentry = input1(self.framd1,'Input Category(If None input Unallocated)',0.45,0.49,)
         self.idateentry = input1(self.framd1,'Input Date Of Income',0.55,0.59,)
 
-        esubmit = tk.Button(self.framd1, text='Submit', relief=tk.FLAT, bg= 'white')
+        esubmit = tk.Button(self.framd1, text='Submit', relief=tk.FLAT, bg= 'white',
+                            command=lambda:self.submit(self.inameentry,self.ispententry,self.icategoryentry,self.idateentry,'Income','Income Successfully Logged'))
         esubmit.place(relx= 0.5, rely=0.65,anchor='center')
 
 
 class navbar():
     def __init__(self,windowname):
         self.window = windowname
+
+    def nobudget(self,a):
+   
+       labelno = tk.Label(self.window,text=a,bg='white',font=(None,35,'bold'))
+       labelno.place(relx= 0.54, rely=0.45,anchor='center')
+       buttonno = tk.Button(self.window,text="Create Budget",bg='#7476B1',relief=tk.FLAT,command=self.create1,fg='white',font=5)
+       buttonno.place(relx= 0.54, rely=0.6,anchor='center')
+       buttonno.config(width=14,height=2)
     
     def frame(self):
         global button, image
