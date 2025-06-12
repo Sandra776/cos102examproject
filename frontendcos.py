@@ -279,8 +279,8 @@ class navbar():
         #CREATES IMAGES FOR THE ICONS ON NAVBAR
         
         #EACH ICON IMAGE FILE
-        dash = image(r"C:\Users\sandr\Desktop\cos102examproject\dash.png") 
-        icona = image(r"C:\Users\sandr\Desktop\cos102examproject\ICONA.png")
+        dash = image(r"dash.png") 
+        icona = image(r"ICONA.png")
         
         #NAVBAR BACKGROUND
         self.fram = tk.Frame(self.window,bg=colback, width=100, padx=10)
