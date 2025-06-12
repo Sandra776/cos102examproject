@@ -49,7 +49,7 @@ class Connect:
                 port='5432',
                 dbname='cosexamproject',
                 user='postgres',
-                password='cos102'
+                password='cos101'
             )
             self.cursor = self.connection.cursor()
             print("Connected to 'cosexamproject' database successfully")
@@ -59,8 +59,8 @@ class Connect:
     def create_users_table(self):
         try:
             self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS Users (
-                    Id SERIAL PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
                     Username TEXT UNIQUE NOT NULL,
                     Password TEXT
                 );
@@ -70,28 +70,30 @@ class Connect:
         except Exception as error:
             print(f"Error creating users table: {error}")
 
-    def create_budget_table(self):
+    def create_budget_table(self,a):
         try:
-            self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS Budget (
+            budget_name = a + '_budget'
+            query = sql.SQL("""
+                 CREATE TABLE IF NOT EXISTS {} (
                     Id SERIAL PRIMARY KEY,
-                    User_id INTEGER REFERENCES users(Id),
                     Month TEXT NOT NULL,
                     Total_amount REAL NOT NULL,
                     Unallocated_funds REAL NOT NULL
                 );
-            """)
+            """).format(sql.Identifier(budget_name))
+
+            self.cursor.execute(query)
             self.connection.commit()
-            print("Budget table created")
+            print(f"Budget table '{budget_name}' created")
         except Exception as error:
-            print(f"Error creating budget table: {error}")
+            print(f"Error creating budget table '{budget_name}': {error}")
+
 
     def create_Category_table(self):
         try:
             self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS Category
+                CREATE TABLE IF NOT EXISTS Category(
                     Id SERIAL PRIMARY KEY,
-                    User_id INTEGER REFERENCES user(id),
                     Name TEXT NOT NULL,
                     Money_allocated FLOAT NOT NULL,
                     Warning_amount FLOAT NOT NULL,
@@ -106,9 +108,8 @@ class Connect:
     def create_Transaction_table(self):
         try:
             self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS Tranaction(
+                CREATE TABLE IF NOT EXISTS Transaction(
                     Id SERIAL PRIMARY KEY,
-                    User_id INTEGER REFERENCES users(id),
                     Date DATE NOT NULL,
                     Amount REAL NOT NULL,
                     Category TEXT NOT NULL,
@@ -140,7 +141,9 @@ class Connect:
 
 
 call = Connect()
-call.connectserv
+call.createdbase()
+call.connectserv()
+call.create_users_table()
 def budget():
- budget_exists = True
- return budget_exists
+    budget_exists = True
+    return budget_exists
