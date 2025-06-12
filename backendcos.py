@@ -71,6 +71,7 @@ class Connect:
             print(f"Error creating users table: {error}")
 
     def create_budget_table(self,a):
+        global budget_name
         try:
             budget_name = a + '_budget'
             query = sql.SQL("""
@@ -78,7 +79,8 @@ class Connect:
                     Id SERIAL PRIMARY KEY,
                     Month TEXT NOT NULL,
                     Total_amount REAL NOT NULL,
-                    Unallocated_funds REAL NOT NULL
+                    Warning_amount REAL NOT NULL
+                    Date_created DATE NOT NULL
                 );
             """).format(sql.Identifier(budget_name))
 
@@ -87,6 +89,19 @@ class Connect:
             print(f"Budget table '{budget_name}' created")
         except Exception as error:
             print(f"Error creating budget table '{budget_name}': {error}")
+
+    def budget_table_insert(self,b,c,d,e):
+        try:
+            insert_query = sql.SQL("""
+                INSERT INTO {} (Month, Total_amount, Warning_amount, Date_creted)
+                VALUES (%s, %s, %s);
+            """).format(sql.Identifier(budget_name))
+            data_to_insert = (b, c, d,e)
+
+            self.cursor.execute(insert_query,data_to_insert)
+            print("Data inserted successfully")
+        except Exception as error:
+            print(f"Error inserting data: {error}")
 
 
     def create_Category_table(self):
@@ -104,6 +119,8 @@ class Connect:
             print("Category table crated.")
         except Exception as error:
             print(f"Error creating category table: {error}")
+
+    
 
     def create_Transaction_table(self):
         try:
@@ -138,6 +155,7 @@ class Connect:
         if self.connection:
             self.connection.close()
             print("Connection closed.")
+    
 
 
 call = Connect()
