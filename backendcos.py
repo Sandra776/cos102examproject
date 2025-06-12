@@ -70,6 +70,20 @@ class Connect:
         except Exception as error:
             print(f"Error creating users table: {error}")
 
+#Sign up insert into db
+    def user_table_insert(self, u, p):
+        try:
+            insert_query = sql.SQL("""
+                INSERT INTO {} (username, password)
+                VALUES (%s, %s);
+            """)
+            data_to_insert = (u, p)
+
+            self.cursor.execute(insert_query,data_to_insert)
+            print("Data inserted successfully")
+        except Exception as error:
+            print(f"Error inserting data: {error}")
+
     def create_budget_table(self,a):
         global budget_name
         try:
@@ -103,50 +117,121 @@ class Connect:
         except Exception as error:
             print(f"Error inserting data: {error}")
 
-
-    def create_Category_table(self):
+    def budget_table_exists(self):
         try:
+            table_name = budget_name
             self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS Category(
-                    Id SERIAL PRIMARY KEY,
-                    Name TEXT NOT NULL,
-                    Money_allocated FLOAT NOT NULL,
-                    Warning_amount FLOAT NOT NULL,
-                    Date DATE NOT NULL
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = %s
                 );
-            """)
-            self.connection.commit()
-            print("Category table crated.")
+            """, (table_name,))
+            exists = self.cursor.fetchone()[0]
+            print(f"Budget table '{table_name}' exists: {exists}")
+            return exists
         except Exception as error:
-            print(f"Error creating category table: {error}")
+            print(f"Error checking for budget table existence: {error}")
+            return False
 
-    
 
-    def create_Transaction_table(self):
+    def create_category_table(self,a):
+            global category_name
+            try:
+                category_name = a + 'category'
+                query = sql.SQL("""
+                    CREATE TABLE IF NOT EXISTS Category(
+                        Id SERIAL PRIMARY KEY,
+                        Name TEXT NOT NULL,
+                        Money_allocated FLOAT NOT NULL,
+                        Warning_amount FLOAT NOT NULL,
+                        Date DATE NOT NULL
+                    );
+                """).format(sql.Identifier(category_name))
+
+                self.cursor.execute(query)            
+                self.connection.commit()
+                print(f"Category table '{category_name}' created")
+            except Exception as error:
+                print(f"Error creating category table: '{category_name}' : {error}")
+
+    def category_table_insert(self,b,c,d,e):
         try:
-            self.cursor.execute("""
+            insert_query = sql.SQL("""
+                INSERT INTO {} (Name, Money_allocated, Warning_amount, Date)
+                VALUES (%s, %s, %s, %s);
+            """).format(sql.Identifier(category_name))
+            data_to_insert = (b, c, d, e)
+
+            self.cursor.execute(insert_query,data_to_insert)
+            print("Data inserted successfully")
+        except Exception as error:
+            print(f"Error inserting data: {error}")
+
+    def create_transaction_table(self,a):
+        global transaction_name 
+        try:
+            transaction_name = a + 'Transaction'
+            query = sql.SQL("""
                 CREATE TABLE IF NOT EXISTS Transaction(
                     Id SERIAL PRIMARY KEY,
+                    Name TEXT NOT NULL
                     Date DATE NOT NULL,
                     Amount REAL NOT NULL,
                     Category TEXT NOT NULL,
                     Description TEXT,
-                    Type TEXT CHECK (type IN ('income', 'expense')) NOT NULL
+                    Type TEXT NOT NULL
                 );
-            """)
-            self.connection.commit()
-            print("Transaction table created.")
-        except Exception as error:
-            print(f"Error creating transactions table: {error}")
+            """).format(sql.Identifier(transaction_name))
 
-    def delete_table(self, table_name):
+            self.cursor.execute(query)
+            self.connection.commit()
+            print(f"Transaction table created '{transaction_name}' created")
+        except Exception as error:
+            print(f"Error creating transactions table: '{transaction_name}' : {error}")
+
+    def transaction_table_insert(self,b,c,d,e,f,g):
+        try:
+            insert_query = sql.SQL("""
+                INSERT INTO {} (Date, Amount, Category, Descripton, Type)
+                VALUES (%s, %s, %s, %s, %s, %s);
+            """).format(sql.Identifier(transaction_name))
+            data_to_insert = (b, c, d, e, f, g)
+
+            self.cursor.execute(insert_query,data_to_insert)
+            print("Data inserted successfully")
+        except Exception as error:
+            print(f"Error inserting data: {error}")
+
+    def create_calculation_table(self,a):
+        global calculate_name 
+        try:
+            calculation_name = a + 'calculation'
+            query = sql.SQL("""
+                CREATE TABLE IF NOT EXISTS calculation(
+                    Id SERIAL PRIMARY KEY,
+                    unallocated_funds REAL NOT NULL
+                    total_amounts_pent REAL NOT NULL,
+                # total amount amout spent = addition of total expenses
+                # total amount left = budget - total amount spent
+                # unallocated funds = budget - total amount in  categories
+                # visual display for everything
+                );
+            """).format(sql.Identifier(transaction_name))
+
+            self.cursor.execute(query)
+            self.connection.commit()
+            print(f"Transaction table created '{transaction_name}' created")
+        except Exception as error:
+            print(f"Error creating transactions table: '{transaction_name}' : {error}")
+
+    def delete_table(self):
         """Delete a table by name"""
         try:
-            self.cursor.execute(sql.SQL("DROP TABLE IF EXISTS {} CASCADE").format(sql.Identifier(table_name)))
+            self.cursor.execute(sql.SQL("DROP TABLE IF EXISTS {} CASCADE").format(sql.Identifier(budget_name, category_name, transaction_name)))
             self.connection.commit()
-            print(f"Table '{table_name}' deleted.")
+            print(f"Table '{budget_name, category_name, transaction_name}' deleted.")
         except Exception as error:
-            print(f"Error deleting table '{table_name}': {error}")
+            print(f"Error deleting table '{budget_name, category_name, transaction_name}': {error}")
 
     def close(self):
         """Close the DB connection"""
