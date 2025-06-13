@@ -70,19 +70,57 @@ class Connect:
         except Exception as error:
             print(f"Error creating users table: {error}")
 
-#Sign up insert into db
-    def user_table_insert(self, u, p):
+#Signup
+    def signup(self, u, p):
         try:
-            insert_query = sql.SQL("""
-                INSERT INTO {} (username, password)
-                VALUES (%s, %s);
-            """)
-            data_to_insert = (u, p)
+            # Check if username already exists
+            self.cursor.execute("""
+                SELECT 1 FROM users WHERE username = %s;
+            """, (u))
+            if self.cursor.fetchone():
+                print(f"Username '{u}' is already taken.")
+                return False
 
-            self.cursor.execute(insert_query,data_to_insert)
-            print("Data inserted successfully")
+            # Insert new user
+            self.cursor.execute("""
+                INSERT INTO users (username, password)
+                VALUES (%s, %s);
+            """, (u, p))
+            self.connection.commit()
+            print(f"User '{u}' signed up successfully.")
+            return True
+
         except Exception as error:
-            print(f"Error inserting data: {error}")
+            print(f"Error during signup: {error}")
+            return False
+        
+#Signin 
+def signin(self, u, p):
+    try:
+        # Fetch the stored password for the given username
+        self.cursor.execute("""
+            SELECT password FROM users WHERE username = %s;
+        """, (u,))
+        result = self.cursor.fetchone()
+
+        if result is None:
+            print("Username not found.")
+            return False
+
+        stored_password = result[0]
+
+        if stored_password == p:
+            print("Login successful.")
+            return True
+        else:
+            print("Incorrect password.")
+            return False
+
+    except Exception as error:
+        print(f"Error during signin: {error}")
+        return False
+
+
 
     def create_budget_table(self,a):
         global budget_name
@@ -216,13 +254,13 @@ class Connect:
                 # unallocated funds = budget - total amount in  categories
                 # visual display for everything
                 );
-            """).format(sql.Identifier(transaction_name))
+            """).format(sql.Identifier(calculation_name))
 
             self.cursor.execute(query)
             self.connection.commit()
-            print(f"Transaction table created '{transaction_name}' created")
+            print(f"Transaction table created '{calculation_name}' created")
         except Exception as error:
-            print(f"Error creating transactions table: '{transaction_name}' : {error}")
+            print(f"Error creating transactions table: '{calculation_name}' : {error}")
 
     def delete_table(self):
         """Delete a table by name"""

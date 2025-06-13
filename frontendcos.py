@@ -3,14 +3,15 @@ from datetime import datetime
 from PIL import Image, ImageTk
 from tkinter import messagebox as mg
 from backendcos import budget
+from backendcos import Connect
 
-
-
-colback = "#303269"
+backend = Connect()
+backend.connectserv()
+colback = "#394D7B"
 colman = 'white'
 def image(a):
          icon = Image.open(a)
-         icon1 = icon.resize((160,160))
+         icon1 = icon.resize((130,150))
          icon2 = ImageTk.PhotoImage(icon1) 
          return icon2
 
@@ -36,22 +37,25 @@ class create_info():
           m = float(setamount.get())
           c = float(wamount.get())                                  
           my=  [name,setamount,wamount,date]
-
+          #see = backend.get_set_budget_amount() gets the amount left to spend in the budget and returns it
           if n == '' or c == '' or d == '':
               mg.showerror('Info Error', 'Please Input In Every Field')
               self.iserror = True
+          elif c>=m:
+            mg.showerror('Info Error', 'Warning Amount Cannot \nbe higher than or Equal to Set Amount')
           else:
            for i in my:
              i.delete(0,'end')
            mg.showinfo(e,f)
            if frame == self.framd:
-               create_type = 'budget'
+             backend.create_budget_table(username)
+             #backend.budget_table_insert(n,m,c,d)
+             #backend.budget_Create_category_table(username)
+             #backend.create_Transaction_table(username)
            else:
-               create_type = 'category' 
-           #this will input values into table      
-           
-           
-         
+              print('info')
+              #backend.category_table_insert(n,m,c,d)
+              #backend.unallocated_remove()
 
        except ValueError:
              mg.showerror('Info Value', 'Error Inputting Values')
@@ -61,7 +65,7 @@ class create_info():
       b= mg.askyesno('Delete Confirmation','Are you Sure You Want to Delete This Budget')
       if  b == True:
        #this will be to run a method in the backend that deletes the budget table and sets budget exists to false
-       budget() == False 
+       #backend.delete_table()
        mg.showinfo('Delete', 'Budget Succesfully Deleted') 
    
    def display(self):
@@ -70,7 +74,9 @@ class create_info():
         self.framd.place(x=230,y=45)
         enam = tk.Label(self.framd, text='Create Budget',bg=colback,font=(None,20,'bold'),fg=colman)
         enam.place(relx= 0.5, rely=0.1,anchor='center')
-
+        
+        #check if budget exist
+        #backend.check_budget_exists()
         if budget() == True:
          nam = tk.Label(self.framd, text='Budget Already Exists\n To create Another Budget \nDelete The Current One',bg=colback,font=(None,20,'italic'),fg=colman)
          nam.place(relx= 0.5, rely=0.4,anchor='center')
@@ -92,6 +98,7 @@ class create_info():
         self.framd1.place(x=750,y=45)
         inam = tk.Label(self.framd1, text='Create Category',bg=colback,font=(None,20,'bold'),fg=colman)
         inam.place(relx= 0.5, rely=0.1,anchor='center')
+
         if budget() == False:
              nam1 = tk.Label(self.framd1, text='Cannot Create \nCategories Without A budget',bg=colback,font=(None,17,'bold'),fg=colman)
              nam1.place(relx= 0.5, rely=0.4,anchor='center')
@@ -112,14 +119,18 @@ class dashboard_info():
 
    def display(self):
     m =navbar(window)
+
+    #backend.check_budget_exists()
+
     budget()
     if budget()== False:
             m.nobudget('Cannot Show Budget And Category Info\n Because Budget Does Not Exist')
     else:
       #BUDGET DISPLAY FRAME
+      #bug_info=backend.get_budget_info() gets a list of [unallocated fund,,total amount left to spend,total spent]
       self.fram = tk.Frame(self.window,bg=colback, width=700,height=180, padx=10)
       self.fram.place(x=180,y=40)
-
+      
       monnam = tk.Label(self.fram, text='Month',bg=colback,font=(None,40,'bold'),fg=colman)
       monnam.place(relx=0.05, rely=0.08)
       datnam= tk.Label(self.fram, text='Date Created',bg=colback,font=(None,20,'italic'),fg=colman)
@@ -139,6 +150,17 @@ class dashboard_info():
       snam = tk.Label(self.fram2, text='TOTAL SPENT',bg=colback,font=(None,15,'bold'),fg=colman)
       snam.place(relx=0.01,rely=0.3)
       
+      #cat_nam=backend.get_category_name() returns list of category names
+      #cat_spent=backend.get_category_left_spend() returns list of category left to spent
+      #cat_spent=backend.get_category_spent() returns list of category spent amount
+      #cat_check_warning=backend_check_warning() gets warning amount for category, gets spent in category,get amount,
+      #  checks wether it is above warning amount,or above the amount set, if it is above warning amount and below amount set 
+      # colour=yellow, if it is above set amount colour=red, if it is below warning amount  colour= green, return colour
+
+
+      # for loop uses cat_nam length and inputes values into each frame
+
+
       #CATEGORY DISPLAY FRAMES
       wi1=self.widget('red',180,250)
       wi2= self.widget('green',180,460)
@@ -152,7 +174,8 @@ class dashboard_info():
       wi10= self.widget('green',1020,460)
 
       widget = [wi1,wi2,wi3,wi4,wi5,wi6,wi7,wi8,wi9,wi10]
-
+      
+    # check if you have gone over warning amount
    def widget(self,colour,a,b,m=colback):
       if colour=='red':
          m= "#B17474"
@@ -177,23 +200,16 @@ class profile_info():
    
     def display(self):
         label = tk.Label(self.window,bg='white',text='Profile Info', font=(None,40,'bold'))
-        label.place(relx=0.1,rely=0.05)
+        label.place(relx=0.1,rely=0.3)
         self.fr1am = tk.Frame(self.window,bg=colback, width=900,height=100, padx=10) 
-        self.fr1am.place(relx=0.5,rely=0.23,anchor='center')
+        self.fr1am.place(relx=0.5,rely=0.5,anchor='center')
 
-        label1 = tk.Label(self.window,bg='white',text='History', font=(None,40,'bold'))
-        label1.place(relx=0.1,rely=0.35)
-        self.fr2am = tk.Frame(self.window,bg=colback, width=900,height=350, padx=10) 
-        self.fr2am.place(relx=0.5,rely=0.72,anchor='center')
+        #backend.get_user_info()
+        userl = tk.Label(self.fr1am, text=f'Username:{username}', font=(None,12,'italic'),bg=colback,fg=colman)
+        userl.place(relx=0.06,rely=0.15)
 
-        userl = tk.Label(self.fr1am, text='Username:', font=(None,12,'italic'),bg=colback,fg=colman)
-        userl.place(relx=0.08,rely=0.25,anchor='center')
-        edu= tk.Button(self.fr1am,text='Edit Username',bg=colman, relief= tk.FLAT)
-        edu.place(relx=0.92,rely=0.25,anchor='center')
-        passl = tk.Label(self.fr1am, text='Password:', font=(None,12,'italic'),bg=colback,fg=colman)
-        passl.place(relx=0.08,rely=0.65,anchor='center')
-        passu= tk.Button(self.fr1am,text='Edit Password',bg=colman, relief= tk.FLAT)
-        passu.place(relx=0.92,rely=0.65,anchor='center')
+        passl = tk.Label(self.fr1am, text= f'Password:{password}', font=(None,12,'italic'),bg=colback,fg=colman)
+        passl.place(relx=0.06,rely=0.55)
    
 
 class track_info():
@@ -236,7 +252,10 @@ class track_info():
               transaction_type='Income'
             for i in my:
              i.delete(0,'end')
+            #backend.transaction_table_insert(n,d,m,c,d,transaction_type) this
+            #  also subtracts or adds money left to spend in category, and then adds or subtract from  total spent
             mg.showinfo(a,b)
+
              
        except ValueError:
              mg.showerror('Info Value', 'Error Inputting Values')
@@ -246,6 +265,7 @@ class track_info():
     def display(self): 
       m =navbar(window)
       budget()
+      #
       if budget() == False:
             m.nobudget('Cannot Log Expenses And Income\n Because Budget Does Not Exist')
       else: 
@@ -279,8 +299,11 @@ class navbar():
         #CREATES IMAGES FOR THE ICONS ON NAVBAR
         
         #EACH ICON IMAGE FILE
-        dash = image(r"dash.png") 
-        icona = image(r"ICONA.png")
+        dash = image(r"C:\Users\sandr\Desktop\cos102examproject\dash.png") 
+        icona = image(r"C:\Users\sandr\Desktop\cos102examproject\logon.png")
+        track = image(r"C:\Users\sandr\Desktop\cos102examproject\track.png")
+        cren = image(r"C:\Users\sandr\Desktop\cos102examproject\create.png")
+        prof = image(r"C:\Users\sandr\Desktop\cos102examproject\prof.png")
         
         #NAVBAR BACKGROUND
         self.fram = tk.Frame(self.window,bg=colback, width=100, padx=10)
@@ -294,14 +317,14 @@ class navbar():
          cbutton.config(width='0px', height='60px', activebackground=colback)
         
         self.dashboard=button(0.22, self.dashboard1, dash)
-        self.track=button(0.39,self.track1,dash)
-        self.create=button(0.56,self.create1,dash)
-        self.profile=button(0.73,self.profile1,dash)
+        self.track=button(0.39,self.track1,track)
+        self.create=button(0.56,self.create1,cren)
+        self.profile=button(0.73,self.profile1,prof)
         self.home= button(0.05,self.home1,icona)
     
     #METHODS TO SWITCH BETWEEN TABS
     def home1(self):
-       self.destroy(0.05,self.home1,r"C:\Users\sandr\Desktop\cos102examproject\ICONA.png")
+       self.destroy(0.05,self.home1,r"C:\Users\sandr\Desktop\cos102examproject\logon.png")
        home_info()
        
     def dashboard1(self):
@@ -311,19 +334,19 @@ class navbar():
         m.display()
       
     def track1(self):
-        self.destroy(0.39, self.track1,r"C:\Users\sandr\Desktop\cos102examproject\activedash.png")
+        self.destroy(0.39, self.track1,r"C:\Users\sandr\Desktop\cos102examproject\activetrack.png")
         m = track_info(window)
         window.title('Track')
         m.display()
       
     def create1(self):
-        self.destroy(0.56, self.create1,r"C:\Users\sandr\Desktop\cos102examproject\activedash.png")
+        self.destroy(0.56, self.create1,r"C:\Users\sandr\Desktop\cos102examproject\activecrea.png")
         m = create_info(window)
         window.title('Create')
         m.display()
 
     def profile1(self):
-        self.destroy(0.73, self.profile1,r"C:\Users\sandr\Desktop\cos102examproject\activedash.png")
+        self.destroy(0.73, self.profile1,r"C:\Users\sandr\Desktop\cos102examproject\activeprof.png")
         m = profile_info(window)
         window.title('Profile')
         m.display()
@@ -340,42 +363,118 @@ class navbar():
 
        button(dis,com,pic)
 
-
-
 #HOME WINDOW
-window = tk.Tk()
-window.geometry('700x500')
-window.config(bg='white')
-window.iconbitmap(r"C:\Users\sandr\Desktop\cos102examproject\actualicon.ico")
+class loginsignin():
+ 
+ def check_signin(self):
+   password1=self.passe.get()
+   user1=self.usere.get()
 
-window.title('Welcome')
-nav= navbar(window)
-icon3 = Image.open(r"C:\Users\sandr\Desktop\cos102examproject\s.jpg")
-icon5 = icon3.resize((600,1000))
-icon4 = ImageTk.PhotoImage(icon5)
-picture = tk.Label(window, image=icon4)
-picture.image = icon4
-picture.pack(side= 'left', fill='y')
-picture.config(width=240)
+   #check= backend.check_user(user1,password1)
 
-def sign_in():
+   if self.passe.get() == '' and self.usere.get() == '':
+      mg.showerror('Input Error','Please Input In every field')
+   else:
+    for widget in window.winfo_children():
+          widget.destroy()
+
+    home_info()
+    nav= navbar(window)
+    nav.frame()
+  
+ def create_signup(self):
+     global username,password
+     username= self.usere1.get()
+     password=self.passe1.get()
+     
+     if self.passe1.get() == '' and self.usere1.get() == '':
+      mg.showerror('Input Error','Please Input In every field')
+     else:
+      #backend.user_table_insert(username,password)
+      for widget in window.winfo_children():
+          widget.destroy()
+
+     home_info()
+     nav= navbar(window)
+     nav.frame()
+
+ def sign_in(self):
+   window.title('Sign In')
    button2.destroy()
+   wel.destroy()
+   button4.destroy()
+   lend.destroy()
+   background.destroy()
 
+   back =tk.Button(window, text='Go Back',relief=tk.FLAT,bg=colback,fg=colman,command=intro)
+   back.config(width=10)
+
+   back.place(relx=0.9,rely=0.2,anchor='center')  
+   title1 = tk.Label(window, text='Sign In',bg = colman, font=(None,20,'bold'))
+   title1.place(relx=0.5,rely=0.2,anchor='center') 
+   title1.config(width=8)
+   self.usern = tk.Label(window, text='Username:',bg=colman,font=(None,10,'italic'))
+   self.usern.place(relx=0.5,rely=0.3,anchor='center')
+   self.usere = tk.Entry(window,bg=colback,relief=tk.FLAT,fg=colman)
+   self.usere.place(relx=0.6,rely=0.35,anchor='center')
+   self.usere.config(width=30)
+
+   self.passn = tk.Label(window, text='Password:',bg=colman,font=(None,10,'italic'))
+   self.passn.place(relx=0.5,rely=0.45,anchor='center')
+   self.passe = tk.Entry(window,bg=colback,relief=tk.FLAT,fg=colman, show='*')
+   self.passe.place(relx=0.6,rely=0.5,anchor='center')
+   self.passe.config(width=30)
+
+   buttonsign = tk.Button(window,text='Sign In',command=self.check_signin,relief=tk.FLAT,bg=colback,fg=colman)
+   buttonsign.place(relx=0.6,rely=0.6,anchor='center')
+   buttonsign.config(width=10)
+
+ def sign_up(self):
+   window.title('Sign Up')
+   button2.destroy()
+   wel.destroy()
+   button4.destroy()
+   lend.destroy()
+   background.destroy()
+   
+
+   title1 = tk.Label(window, text='Sign Up',bg = colman, font=(None,20,'bold'))
+   title1.place(relx=0.5,rely=0.2,anchor='center') 
+   self.usern1 = tk.Label(window, text='Username:',bg=colman,font=(None,10,'italic'))
+   self.usern1.place(relx=0.5,rely=0.3,anchor='center')
+   self.usere1 = tk.Entry(window,bg=colback,relief=tk.FLAT,fg=colman)
+   self.usere1.place(relx=0.6,rely=0.35,anchor='center')
+   self.usere1.config(width=30)
+
+   self.passn1 = tk.Label(window, text='Password:',bg=colman,font=(None,10,'italic'))
+   self.passn1.place(relx=0.5,rely=0.45,anchor='center')
+   self.passe1 = tk.Entry(window,bg=colback,relief=tk.FLAT,fg=colman, show='*')
+   self.passe1.place(relx=0.6,rely=0.5,anchor='center')
+   self.passe1.config(width=30)
+
+   buttonsign = tk.Button(window,text='Sign Up',command=self.create_signup,relief=tk.FLAT,bg=colback,fg=colman)
+   buttonsign.place(relx=0.6,rely=0.6,anchor='center')
+   buttonsign.config(width=10) 
+   back =tk.Button(window, text='Go Back',relief=tk.FLAT,bg=colback,fg=colman,command=intro)
+   back.config(width=10)
+
+   back.place(relx=0.9,rely=0.2,anchor='center')  
+
+
+
+this=loginsignin()
 
 def home_info():
- nav.frame
  window.title('Welcome')
  window.geometry('1280x697')
  button2.destroy()
- logo = Image.open(r"C:\Users\sandr\Desktop\cos102examproject\ICONA.png")
- logo1 = ImageTk.PhotoImage(logo)
 
  picture = tk.Label(window, image=logo1,bg='white')
  picture.image = logo1
- picture.place(relx=0.25,rely=0.4,anchor='center')
- picture.config(width=150)
+ picture.place(relx=0.25,rely=0.34,anchor='center')
+ picture.config(width=260)
  
- apn = tk.Label(window,text='Pocket Budget',font=(None,40,'bold'),bg='white')
+ apn = tk.Label(window,text='Pocket Aid',font=(None,40,'bold'),bg='white')
  apn.place(relx=0.25,rely=0.55,anchor='center')
  aps = tk.Label(window,text='Save Now, Benefit Later',font=(None,20,'italic'),bg='white')
  aps.place(relx=0.25,rely=0.65,anchor='center')
@@ -383,11 +482,49 @@ def home_info():
  title = tk.Label(window,text='Instructions',font=(None,30,'bold'),bg='white')
  title.place(relx=0.7,rely=0.2,anchor='center')
 
- body= tk.Label(window,text='Dashboard Tab- Shows the amount of money budgeted,\n unallocated funds and the category Info.\nEach category is color coded based on how much you spend.\n\nTrack- Allows you to log income and expenses.\n\nCreate- Allows You to create a monthly\nbudget and different categories.\n\nProfile- Allows you to see and change username and password\nand check expenses and income.',font=(None,17,'italic'),bg='white')
+ body= tk.Label(window,text='Dashboard Tab- Shows the amount of money budgeted,\n unallocated funds and the category Info.\nEach category is color coded based on how much you spend.\n\nTrack- Allows you to log income and expenses.\n\nCreate- Allows You to create a monthly\nbudget and different categories.\n\nProfile- Allows you to see username and password.',font=(None,17,'italic'),bg='white')
  body.place(relx=0.7,rely=0.5,anchor='center')
 
-button2 = tk.Button(window, text='open',command=sign_in)
-button2.place(relx=0.5,rely=0.5,anchor='center')
+window = tk.Tk()
+window.geometry('700x500')
+window.config(bg='white')
+window.iconbitmap(r"C:logoico.ico")
 
+window.title('Guide')
+icon3 = Image.open(r"s.jpg")
+icon5 = icon3.resize((600,500))
+icon4 = ImageTk.PhotoImage(icon5)
+picture5 = tk.Label(window, image=icon4)
+picture5.image = icon4
+picture5.pack(side= 'left', fill='y')
+picture5.config(width=260)
+
+logo = Image.open(r"logoico.ico")
+logo1 = ImageTk.PhotoImage(logo)
+
+def intro():
+ window.title('Welcome')
+ global wel,lend,button2,button4, background
+
+ background = tk.Label(window,bg='white')
+ background.pack()
+ background.config(width=900,height=900)
+
+ wel = tk.Label(window,text='Welcome To\n Pocket Aid Budgeting App',font=(None,20,'bold'),bg='white')
+ lend = tk.Label(window,image=logo1, bg='white')
+ lend.image= logo1
+ lend.config(width=250,height=170)
+
+ button2 = tk.Button(window, text='Sign In',command=this.sign_in,relief=tk.FLAT,bg=colback,fg=colman)
+ button2.config(width=10)
+ button4 = tk.Button(window, text='Sign Up',command=this.sign_up,relief=tk.FLAT,bg=colback,fg=colman)
+ button4.config(width=10)
+ 
+ wel.place(relx=0.68,rely=0.65,anchor='center')
+ lend.place(relx=0.7,rely=0.34,anchor='center')
+ button2.place(relx=0.58,rely=0.8,anchor='center')
+ button4.place(relx=0.78,rely=0.8,anchor='center')
+
+intro()
 
 window.mainloop()
