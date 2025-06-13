@@ -415,6 +415,69 @@ class Connect:
         except Exception as error:
             print(f"Error creating transactions table: '{calculation_name}' : {error}")
 
+    def get_category_names(self, category_table):
+        try:
+            self.cursor.execute(sql.SQL("""
+                SELECT Name FROM {}
+            """).format(sql.Identifier(category_table)))
+            
+            results = self.cursor.fetchall()
+            return [row[0] for row in results]
+        
+        except Exception as error:
+            print(f"Error getting category names: {error}")
+            return []
+        
+    def get_money_allocated_list(self, category_table):
+        try:
+            self.cursor.execute(sql.SQL("""
+                SELECT Money_allocated FROM {}
+            """).format(sql.Identifier(category_table)))
+            
+            results = self.cursor.fetchall()
+            return [row[0] for row in results]
+        
+        except Exception as error:
+            print(f"Error getting money allocated list: {error}")
+            return []
+
+    def get_money_left_list(self, category_table, transaction_table):
+        try:
+            self.cursor.execute(sql.SQL("""
+                SELECT Name, Money_allocated FROM {}
+            """).format(sql.Identifier(category_table)))
+            
+            categories = self.cursor.fetchall()
+            money_left_list = []
+
+            for category_name, allocated in categories:
+                # Get total expenses
+                self.cursor.execute(sql.SQL("""
+                    SELECT COALESCE(SUM(Amount), 0)
+                    FROM {}
+                    WHERE Category = %s AND Type = 'Expense'
+                """).format(sql.Identifier(transaction_table)), (category_name,))
+                total_expense = self.cursor.fetchone()[0]
+
+                # Get total income
+                self.cursor.execute(sql.SQL("""
+                    SELECT COALESCE(SUM(Amount), 0)
+                    FROM {}
+                    WHERE Category = %s AND Type = 'Income'
+                """).format(sql.Identifier(transaction_table)), (category_name,))
+                total_income = self.cursor.fetchone()[0]
+
+                # Compute money left
+                money_left = allocated - total_expense + total_income
+                money_left_list.append(money_left)
+
+            return money_left_list
+
+        except Exception as error:
+            print(f"Error calculating money left: {error}")
+            return []
+
+
 
     def delete_table(self):
         """Delete a table by name"""
