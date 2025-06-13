@@ -95,32 +95,30 @@ class Connect:
             return False
         
 #Signin 
-def signin(self, u, p):
-    try:
-        # Fetch the stored password for the given username
-        self.cursor.execute("""
-            SELECT password FROM users WHERE username = %s;
-        """, (u,))
-        result = self.cursor.fetchone()
+    def signin(self, u, p):
+        try:
+            # Fetch the stored password for the given username
+            self.cursor.execute("""
+                SELECT password FROM users WHERE username = %s;
+            """, (u,))
+            result = self.cursor.fetchone()
 
-        if result is None:
-            print("Username not found.")
+            if result is None:
+                print("Username not found.")
+                return False
+
+            stored_password = result[0]
+
+            if stored_password == p:
+                print("Login successful.")
+                return True
+            else:
+                print("Incorrect password.")
+                return False
+
+        except Exception as error:
+            print(f"Error during signin: {error}")
             return False
-
-        stored_password = result[0]
-
-        if stored_password == p:
-            print("Login successful.")
-            return True
-        else:
-            print("Incorrect password.")
-            return False
-
-    except Exception as error:
-        print(f"Error during signin: {error}")
-        return False
-
-
 
     def create_budget_table(self,a):
         global budget_name
@@ -148,7 +146,7 @@ def signin(self, u, p):
                 INSERT INTO {} (Month, Total_amount, Warning_amount, Date_creted)
                 VALUES (%s, %s, %s);
             """).format(sql.Identifier(budget_name))
-            data_to_insert = (b, c, d,e)
+            data_to_insert = (b, c, d, e)
 
             self.cursor.execute(insert_query,data_to_insert)
             print("Data inserted successfully")
@@ -170,7 +168,6 @@ def signin(self, u, p):
         except Exception as error:
             print(f"Error checking for budget table existence: {error}")
             return False
-
 
     def create_category_table(self,a):
             global category_name
@@ -204,6 +201,32 @@ def signin(self, u, p):
             print("Data inserted successfully")
         except Exception as error:
             print(f"Error inserting data: {error}")
+
+# unallocated funds
+    def get_unallocated_funds(self):
+        try:
+            # Get total budget
+            self.cursor.execute(sql.SQL("""
+                SELECT Total_amount FROM {} ORDER BY Date_created DESC LIMIT 1;
+            """).format(sql.Identifier(budget_name)))
+            budget = self.cursor.fetchone()
+            if not budget:
+                return 0.0
+            total_budget = budget[0]
+
+            # Get total allocated to categories
+            self.cursor.execute(sql.SQL("""
+                SELECT SUM(Money_allocated) FROM {};
+            """).format(sql.Identifier(category_name)))
+            total_allocated = self.cursor.fetchone()[0]
+            if total_allocated is None:
+                total_allocated = 0.0
+
+            return total_budget - total_allocated
+        except Exception as error:
+            print(f"Error calculating unallocated funds: {error}")
+            return 0.0
+
 
     def create_transaction_table(self,a):
         global transaction_name 
@@ -240,6 +263,38 @@ def signin(self, u, p):
         except Exception as error:
             print(f"Error inserting data: {error}")
 
+#total spent from expenses
+    def get_total_spent(self):
+        try:
+            self.cursor.execute(sql.SQL("""
+                SELECT SUM(Amount) FROM {} WHERE Type = 'Expense';
+            """).format(sql.Identifier(transaction_name)))
+            result = self.cursor.fetchone()[0]
+            return result if result else 0.0
+        except Exception as error:
+            print(f"Error calculating total spent: {error}")
+            return 0.0
+
+#total left after subtracting categories from budget allocated
+def get_total_left(self):
+    try:
+        # Get total budget
+        self.cursor.execute(sql.SQL("""
+            SELECT Total_amount FROM {} ORDER BY Date_created DESC LIMIT 1;
+        """).format(sql.Identifier(budget_name)))
+        budget = self.cursor.fetchone()
+        if not budget:
+            return 0.0
+        total_budget = budget[0]
+
+        # Get total spent
+        total_spent = self.get_total_spent()
+        return total_budget - total_spent
+    except Exception as error:
+        print(f"Error calculating total left: {error}")
+        return 0.0
+
+
     def create_calculation_table(self,a):
         global calculate_name 
         try:
@@ -249,10 +304,10 @@ def signin(self, u, p):
                     Id SERIAL PRIMARY KEY,
                     unallocated_funds REAL NOT NULL
                     total_amounts_pent REAL NOT NULL,
-                # total amount amout spent = addition of total expenses
+                # total amount spent = addition of total expenses
                 # total amount left = budget - total amount spent
                 # unallocated funds = budget - total amount in  categories
-                # visual display for everything
+                # total amount in categories
                 );
             """).format(sql.Identifier(calculation_name))
 

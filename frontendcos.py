@@ -299,11 +299,11 @@ class navbar():
         #CREATES IMAGES FOR THE ICONS ON NAVBAR
         
         #EACH ICON IMAGE FILE
-        dash = image(r"C:\Users\sandr\Desktop\cos102examproject\dash.png") 
-        icona = image(r"C:\Users\sandr\Desktop\cos102examproject\logon.png")
-        track = image(r"C:\Users\sandr\Desktop\cos102examproject\track.png")
-        cren = image(r"C:\Users\sandr\Desktop\cos102examproject\create.png")
-        prof = image(r"C:\Users\sandr\Desktop\cos102examproject\prof.png")
+        dash = image(r"dash.png") 
+        icona = image(r"logon.png")
+        track = image(r"track.png")
+        cren = image(r"create.png")
+        prof = image(r"prof.png")
         
         #NAVBAR BACKGROUND
         self.fram = tk.Frame(self.window,bg=colback, width=100, padx=10)
@@ -324,29 +324,29 @@ class navbar():
     
     #METHODS TO SWITCH BETWEEN TABS
     def home1(self):
-       self.destroy(0.05,self.home1,r"C:\Users\sandr\Desktop\cos102examproject\logon.png")
+       self.destroy(0.05,self.home1,r"logon.png")
        home_info()
        
     def dashboard1(self):
-        self.destroy(0.22, self.dashboard1,r"C:\Users\sandr\Desktop\cos102examproject\activedash.png")
+        self.destroy(0.22, self.dashboard1,r"activedash.png")
         m = dashboard_info(window)
         window.title('Dashboard')
         m.display()
       
     def track1(self):
-        self.destroy(0.39, self.track1,r"C:\Users\sandr\Desktop\cos102examproject\activetrack.png")
+        self.destroy(0.39, self.track1,r"activetrack.png")
         m = track_info(window)
         window.title('Track')
         m.display()
       
     def create1(self):
-        self.destroy(0.56, self.create1,r"C:\Users\sandr\Desktop\cos102examproject\activecrea.png")
+        self.destroy(0.56, self.create1,r"activecrea.png")
         m = create_info(window)
         window.title('Create')
         m.display()
 
     def profile1(self):
-        self.destroy(0.73, self.profile1,r"C:\Users\sandr\Desktop\cos102examproject\activeprof.png")
+        self.destroy(0.73, self.profile1,r"activeprof.png")
         m = profile_info(window)
         window.title('Profile')
         m.display()
@@ -488,7 +488,7 @@ def home_info():
 window = tk.Tk()
 window.geometry('700x500')
 window.config(bg='white')
-window.iconbitmap(r"C:logoico.ico")
+window.iconbitmap(r"logoico.ico")
 
 window.title('Guide')
 icon3 = Image.open(r"s.jpg")
