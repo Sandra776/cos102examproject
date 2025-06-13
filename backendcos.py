@@ -61,8 +61,8 @@ class Connect:
             self.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id SERIAL PRIMARY KEY,
-                    Username TEXT UNIQUE NOT NULL,
-                    Password TEXT
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT
                 );
             """)
             self.connection.commit()
@@ -70,13 +70,23 @@ class Connect:
         except Exception as error:
             print(f"Error creating users table: {error}")
 
+    def get_username(self,u):
+        
+        try:
+            self.cursor.execute("""
+                SELECT username from users WHERE username = %s;
+            """, (u,))
+            self.username= u
+        except Exception as error:
+            print(f"Username '{u}' doesn't exist")
+
 #Signup
     def signup(self, u, p):
         try:
             # Check if username already exists
             self.cursor.execute("""
                 SELECT 1 FROM users WHERE username = %s;
-            """, (u))
+            """, (u,))
             if self.cursor.fetchone():
                 print(f"Username '{u}' is already taken.")
                 return False
@@ -120,10 +130,10 @@ class Connect:
             print(f"Error during signin: {error}")
             return False
 
-    def create_budget_table(self,a):
+    def create_budget_table(self):
         global budget_name
         try:
-            budget_name = a + '_budget'
+            budget_name = self.username + '_budget'
             query = sql.SQL("""
                  CREATE TABLE IF NOT EXISTS {} (
                     Id SERIAL PRIMARY KEY,
@@ -139,6 +149,9 @@ class Connect:
             print(f"Budget table '{budget_name}' created")
         except Exception as error:
             print(f"Error creating budget table '{budget_name}': {error}")
+
+#function to get budget
+
 
     def budget_table_insert(self,b,c,d,e):
         try:
@@ -169,16 +182,18 @@ class Connect:
             print(f"Error checking for budget table existence: {error}")
             return False
 
-    def create_category_table(self,a):
+    def create_category_table(self):
             global category_name
             try:
-                category_name = a + 'category'
+                category_name = self.username + 'category'
                 query = sql.SQL("""
                     CREATE TABLE IF NOT EXISTS Category(
                         Id SERIAL PRIMARY KEY,
                         Name TEXT NOT NULL,
                         Money_allocated FLOAT NOT NULL,
                         Warning_amount FLOAT NOT NULL,
+                        Total_spent  FLOAT DEFAULT 0,
+                        Total_left_to_spend FLOAT,
                         Date DATE NOT NULL
                     );
                 """).format(sql.Identifier(category_name))
@@ -202,6 +217,19 @@ class Connect:
         except Exception as error:
             print(f"Error inserting data: {error}")
 
+#total allocated to catgories
+    def get_total_in_categories(self):
+        try:
+            self.cursor.execute(sql.SQL("""
+                SELECT SUM(Money_allocated) FROM {};
+            """).format(sql.Identifier(category_name)))
+            result = self.cursor.fetchone()[0]
+            return result if result else 0.0
+        except Exception as error:
+            print(f"Error calculating total in categories: {error}")
+            return 0.0
+
+
 # unallocated funds
     def get_unallocated_funds(self):
         try:
@@ -214,24 +242,18 @@ class Connect:
                 return 0.0
             total_budget = budget[0]
 
-            # Get total allocated to categories
-            self.cursor.execute(sql.SQL("""
-                SELECT SUM(Money_allocated) FROM {};
-            """).format(sql.Identifier(category_name)))
-            total_allocated = self.cursor.fetchone()[0]
-            if total_allocated is None:
-                total_allocated = 0.0
-
+            # Reuse total in categories
+            total_allocated = self.get_total_in_categories()
             return total_budget - total_allocated
         except Exception as error:
             print(f"Error calculating unallocated funds: {error}")
             return 0.0
 
 
-    def create_transaction_table(self,a):
+    def create_transaction_table(self):
         global transaction_name 
         try:
-            transaction_name = a + 'Transaction'
+            transaction_name = self.username + 'Transaction'
             query = sql.SQL("""
                 CREATE TABLE IF NOT EXISTS Transaction(
                     Id SERIAL PRIMARY KEY,
@@ -274,40 +296,116 @@ class Connect:
         except Exception as error:
             print(f"Error calculating total spent: {error}")
             return 0.0
+        
+#total spent from each category
+    def get_total_spent_cat(self,a,b,c):
+        try:
+            # Step 1: Get allocated budget per category
+            self.cursor.execute(sql.SQL("""
+                SELECT Name, Total_spent
+                FROM {}
+            """).format(sql.Identifier(a)))
+            category_data = self.cursor.fetchall()
+            
+            self.cursor.execute(sql.SQL("""
+                SELECT Name, Money_allocated
+                FROM {}
+            """).format(sql.Identifier(a)))
+            category_data1 = self.cursor.fetchall()
+
+            if c== 'Expense':
+                total_spent = category_data + b
+            else:
+                total_spent = category_data - b
+            
+            total_left_to_spend = category_data1 - total_spent
+
+            self.cursor.execute(sql.SQL("""
+            UPDATE {}
+            SET total_spent = %s,
+                total_left_to_spend = %s
+            WHERE Name = %s
+        """).format(sql.Identifier(category_name)), (total_spent, total_left_to_spend))
+
+
+        except Exception as error:
+            print(f"Error calculating remaining budget per category: {error}")
+            return {}
+        
+
+
 
 #total left after subtracting categories from budget allocated
-def get_total_left(self):
-    try:
-        # Get total budget
-        self.cursor.execute(sql.SQL("""
-            SELECT Total_amount FROM {} ORDER BY Date_created DESC LIMIT 1;
-        """).format(sql.Identifier(budget_name)))
-        budget = self.cursor.fetchone()
-        if not budget:
+    def get_total_left(self):
+        try:
+            # Get total budget
+            self.cursor.execute(sql.SQL("""
+                SELECT Total_amount FROM {} ORDER BY Date_created DESC LIMIT 1;
+            """).format(sql.Identifier(budget_name)))
+            budget = self.cursor.fetchone()
+            if not budget:
+                return 0.0
+            total_budget = budget[0]
+
+            # Get total spent
+            total_spent = self.get_total_spent()
+            return total_budget - total_spent
+        except Exception as error:
+            print(f"Error calculating total left: {error}")
             return 0.0
-        total_budget = budget[0]
+        
+#warning amount
+    def check_category_warning(self, category_name, category_title):
+        try:
+            # Step 1: Get the warning amount and money allocated
+            self.cursor.execute(sql.SQL("""
+                SELECT Warning_amount, Money_allocated
+                FROM {}
+                WHERE Name = %s
+            """).format(sql.Identifier(category_name)), (category_title,))
+            
+            result = self.cursor.fetchone()
+            if not result:
+                print(f"Category '{category_title}' not found in table '{category_name}'")
+                return False
 
-        # Get total spent
-        total_spent = self.get_total_spent()
-        return total_budget - total_spent
-    except Exception as error:
-        print(f"Error calculating total left: {error}")
-        return 0.0
+            warning_amount, allocated_amount = result
+
+            # Step 2: Get total expenses for this category from the transactions table
+            self.cursor.execute(sql.SQL("""
+                SELECT COALESCE(SUM(Amount), 0)
+                FROM {}
+                WHERE Category = %s AND Type = 'Expense'
+            """).format(sql.Identifier(transaction_name)), (category_title,))
+            
+            total_spent = self.cursor.fetchone()[0]
+
+            print(f"Total spent in '{category_title}': {total_spent} | Warning level: {warning_amount}")
+
+            # Step 3: Check if spent exceeds or meets warning
+            if total_spent >= warning_amount:
+                print(f"⚠️ Warning: You have reached the warning threshold for '{category_title}'!")
+                return True
+            else:
+                return False
+
+        except Exception as error:
+            print(f"Error checking warning level for category '{category_title}': {error}")
+            return False
 
 
-    def create_calculation_table(self,a):
+    def create_calculation_table(self):
         global calculate_name 
         try:
-            calculation_name = a + 'calculation'
+            calculation_name = self.username + 'calculation'
             query = sql.SQL("""
                 CREATE TABLE IF NOT EXISTS calculation(
                     Id SERIAL PRIMARY KEY,
                     unallocated_funds REAL NOT NULL
-                    total_amounts_pent REAL NOT NULL,
-                # total amount spent = addition of total expenses
-                # total amount left = budget - total amount spent
-                # unallocated funds = budget - total amount in  categories
-                # total amount in categories
+                    total_amounts_spent REAL NOT NULL,
+                    total_allocated_to_category REAL NOT NULL
+                
+                            
                 );
             """).format(sql.Identifier(calculation_name))
 
@@ -316,6 +414,7 @@ def get_total_left(self):
             print(f"Transaction table created '{calculation_name}' created")
         except Exception as error:
             print(f"Error creating transactions table: '{calculation_name}' : {error}")
+
 
     def delete_table(self):
         """Delete a table by name"""
@@ -334,7 +433,6 @@ def get_total_left(self):
             self.connection.close()
             print("Connection closed.")
     
-
 
 call = Connect()
 call.createdbase()
