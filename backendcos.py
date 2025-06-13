@@ -428,18 +428,28 @@ class Connect:
             print(f"Error getting category names: {error}")
             return []
         
-    def get_money_allocated_list(self, category_table):
+    def money_allocated(self):
         try:
-            self.cursor.execute(sql.SQL("""
-                SELECT Money_allocated FROM {}
-            """).format(sql.Identifier(category_table)))
-            
+            # Replace 'category_name' and 'budget_name' with your actual global variables if needed
+            query = sql.SQL("""
+                SELECT c.Money_allocated, c.Date, b.Month
+                FROM {} AS c
+                JOIN {} AS b ON DATE_TRUNC('month', c.Date) = DATE_TRUNC('month', b.Date_created);
+            """).format(
+                sql.Identifier(category_name),
+                sql.Identifier(budget_name)
+            )
+
+            self.cursor.execute(query)
             results = self.cursor.fetchall()
-            return [row[0] for row in results]
-        
+
+            # Each result will be a tuple: (money_allocated, date, month)
+            return results
+
         except Exception as error:
-            print(f"Error getting money allocated list: {error}")
+            print(f"Error retrieving category allocations with dates and months: {error}")
             return []
+
 
     def get_money_left_list(self, category_table, transaction_table):
         try:
