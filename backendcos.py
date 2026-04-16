@@ -29,10 +29,15 @@ class Connect():
             self.cursor.execute(create_db_query)
 
             print(f"Database '{new_dbname}' created successfully")
+            print(f"Database '{new_dbname}' created successfully")
 
         except psycopg2.errors.DuplicateDatabase:
             print(f"Database '{new_dbname}' already exists")
+        except psycopg2.errors.DuplicateDatabase:
+            print(f"Database '{new_dbname}' already exists")
 
+        except Exception as error:
+            print(f"Error creating the database: {error}")
         except Exception as error:
             print(f"Error creating the database: {error}")
 

@@ -17,6 +17,7 @@ colman = 'white'
 def image(a):
          icon = Image.open(a)
          icon1 = icon.resize((130,150))
+         icon1 = icon.resize((130,150))
          icon2 = ImageTk.PhotoImage(icon1) 
          return icon2
 
@@ -127,6 +128,7 @@ class dashboard_info():
             m.nobudget('Cannot Show Budget And Category Info\n Because Budget Does Not Exist')
     else:
       #BUDGET DISPLAY FRAME
+      #bug_info=backend.get_budget_info() gets a list of [unallocated fund,,total amount left to spend,total spent]
       #bug_info=backend.get_budget_info() gets a list of [unallocated fund,,total amount left to spend,total spent]
       self.fram = tk.Frame(self.window,bg=colback, width=700,height=180, padx=10)
       self.fram.place(x=180,y=40)
@@ -437,6 +439,9 @@ class navbar():
         self.track=button(0.39,self.track1,track)
         self.create=button(0.56,self.create1,cren)
         self.profile=button(0.73,self.profile1,prof)
+        self.track=button(0.39,self.track1,track)
+        self.create=button(0.56,self.create1,cren)
+        self.profile=button(0.73,self.profile1,prof)
         self.home= button(0.05,self.home1,icona)
     
     #METHODS TO SWITCH BETWEEN TABS
@@ -482,6 +487,7 @@ class navbar():
 
 class loginsignin():
  
+ 
  def check_signin(self):
    password1=self.passe.get()
    user1=self.usere.get().strip().lower()
@@ -526,10 +532,12 @@ class loginsignin():
        
  def sign_in(self):
    window.title('Sign In')
+   window.title('Sign In')
    button2.destroy()
    wel.destroy()
    button4.destroy()
    lend.destroy()
+   background.destroy()
    background.destroy()
 
    back =tk.Button(window, text='Go Back',relief=tk.FLAT,bg=colback,fg=colman,command=intro)
@@ -538,6 +546,7 @@ class loginsignin():
    back.place(relx=0.9,rely=0.2,anchor='center')  
    title1 = tk.Label(window, text='Sign In',bg = colman, font=(None,20,'bold'))
    title1.place(relx=0.5,rely=0.2,anchor='center') 
+   title1.config(width=8)
    title1.config(width=8)
    self.usern = tk.Label(window, text='Username:',bg=colman,font=(None,10,'italic'))
    self.usern.place(relx=0.5,rely=0.3,anchor='center')
@@ -557,15 +566,23 @@ class loginsignin():
 
  def sign_up(self):
    window.title('Sign Up')
+   window.title('Sign Up')
    button2.destroy()
    wel.destroy()
    button4.destroy()
    lend.destroy()
    background.destroy()
    
+   background.destroy()
+   
 
    title1 = tk.Label(window, text='Sign Up',bg = colman, font=(None,20,'bold'))
    title1.place(relx=0.5,rely=0.2,anchor='center') 
+   self.usern1 = tk.Label(window, text='Username:',bg=colman,font=(None,10,'italic'))
+   self.usern1.place(relx=0.5,rely=0.3,anchor='center')
+   self.usere1 = tk.Entry(window,bg=colback,relief=tk.FLAT,fg=colman)
+   self.usere1.place(relx=0.6,rely=0.35,anchor='center')
+   self.usere1.config(width=30)
    self.usern1 = tk.Label(window, text='Username:',bg=colman,font=(None,10,'italic'))
    self.usern1.place(relx=0.5,rely=0.3,anchor='center')
    self.usere1 = tk.Entry(window,bg=colback,relief=tk.FLAT,fg=colman)
@@ -578,6 +595,7 @@ class loginsignin():
    self.passe1.place(relx=0.6,rely=0.5,anchor='center')
    self.passe1.config(width=30)
 
+   buttonsign = tk.Button(window,text='Sign Up',command=self.create_signup,relief=tk.FLAT,bg=colback,fg=colman)
    buttonsign = tk.Button(window,text='Sign Up',command=self.create_signup,relief=tk.FLAT,bg=colback,fg=colman)
    buttonsign.place(relx=0.6,rely=0.6,anchor='center')
    buttonsign.config(width=10) 
@@ -597,6 +615,8 @@ def home_info():
  picture.image = logo1
  picture.place(relx=0.25,rely=0.34,anchor='center')
  picture.config(width=260)
+ picture.place(relx=0.25,rely=0.34,anchor='center')
+ picture.config(width=260)
  
  apn = tk.Label(window,text='Pocket Aid',font=(None,40,'bold'),bg='white')
  apn.place(relx=0.25,rely=0.55,anchor='center')
@@ -606,6 +626,7 @@ def home_info():
  title = tk.Label(window,text='Instructions',font=(None,30,'bold'),bg='white')
  title.place(relx=0.7,rely=0.2,anchor='center')
 
+ body= tk.Label(window,text='Dashboard Tab- Shows the amount of money budgeted,\n unallocated funds and the category Info.\nEach category is color coded based on how much you spend.\n\nTrack- Allows you to log income and expenses.\n\nCreate- Allows You to create a monthly\nbudget and different categories.\n\nProfile- Allows you to see username and password.',font=(None,17,'italic'),bg='white')
  body= tk.Label(window,text='Dashboard Tab- Shows the amount of money budgeted,\n unallocated funds and the category Info.\nEach category is color coded based on how much you spend.\n\nTrack- Allows you to log income and expenses.\n\nCreate- Allows You to create a monthly\nbudget and different categories.\n\nProfile- Allows you to see username and password.',font=(None,17,'italic'),bg='white')
  body.place(relx=0.7,rely=0.5,anchor='center')
 
@@ -622,21 +643,27 @@ picture5 = tk.Label(window, image=icon4)
 picture5.image = icon4
 picture5.pack(side= 'left', fill='y')
 picture5.config(width=260)
+picture5.config(width=260)
 
 logo = Image.open(os.path.join(BASE_DIR, "logoico.ico"))
 logo1 = ImageTk.PhotoImage(logo)
 
 def intro():
  window.title('Welcome')
+ window.title('Welcome')
  global wel,lend,button2,button4, background
+
 
  background = tk.Label(window,bg='white')
  background.pack()
  background.config(width=900,height=900)
 
  wel = tk.Label(window,text='Welcome To\n Pocket Aid Budgeting App',font=(None,20,'bold'),bg='white')
+
+ wel = tk.Label(window,text='Welcome To\n Pocket Aid Budgeting App',font=(None,20,'bold'),bg='white')
  lend = tk.Label(window,image=logo1, bg='white')
  lend.image= logo1
+ lend.config(width=250,height=170)
  lend.config(width=250,height=170)
 
  button2 = tk.Button(window, text='Sign In',command=this.sign_in,relief=tk.FLAT,bg=colback,fg=colman)
@@ -645,6 +672,7 @@ def intro():
  button4.config(width=10)
  
  wel.place(relx=0.68,rely=0.65,anchor='center')
+ lend.place(relx=0.7,rely=0.34,anchor='center')
  lend.place(relx=0.7,rely=0.34,anchor='center')
  button2.place(relx=0.58,rely=0.8,anchor='center')
  button4.place(relx=0.78,rely=0.8,anchor='center')
